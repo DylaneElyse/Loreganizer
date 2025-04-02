@@ -8,25 +8,22 @@ export default function Navbar() {
     return (
       <div>
       <div className="navbar bg-accent">
-        <Link href={"/"} className="flex-1">
-          <h1 className="btn btn-ghost text-xl">Loreganizer</h1>
-        </Link>
-        <div className="flex-none">
-          <ul className="menu menu-horizontal px-1">
-            <li><Link href="/campaign">Campaign</Link></li>
-            <li>
-              <details>
-                <summary>Account</summary>
-                <ul className="bg-base-100 rounded-t-none p-2">
-                  {/* <li>Account Details</li> */}
-                  <Link href="/" className="btn btn-primary">
-                    <li onClick={firebaseSignOut}>Logout</li>
-                  </Link>
-                </ul>
-              </details>
-            </li>
+      <Link href="/" className="flex-1">
+        <h1 className="btn btn-ghost text-xl">Loreganizer</h1>
+      </Link>
+      <div className="flex-none">
+        <ul className="menu menu-horizontal px-1">
+        <li><Link href="/campaign">Campaign</Link></li>
+        <li>
+          <details>
+          <summary>Account</summary>
+          <ul className="bg-base-100 rounded-t-none p-2">
+            <li onClick={firebaseSignOut} className="cursor-pointer">Logout</li>
           </ul>
-        </div>
+          </details>
+        </li>
+        </ul>
+      </div>
       </div>
     </div>
     )

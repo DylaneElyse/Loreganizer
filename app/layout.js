@@ -8,12 +8,12 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <AuthContextProvider>
     <html data-theme="fantasy" lang="en">
+    <AuthContextProvider>
       <body>
         {children}
       </body>
-    </html>
     </AuthContextProvider>
+    </html>
   );
 }

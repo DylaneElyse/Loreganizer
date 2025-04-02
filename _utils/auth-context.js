@@ -8,18 +8,30 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth } from "./firebase";
+import { useRouter } from "next/navigation";
 
 const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const router = useRouter();
+
+  const handleAuthRedirect = async (authFunction, email, password) => {
+    try {
+      await authFunction(email, password);
+      router.push('/');
+    } catch (error) {
+      console.error("Error during authentication:", error.message);
+      throw error; // Re-throw the error to handle it in the component
+    }
+    }
 
   const signUp = (email, password) => {
-    return createUserWithEmailAndPassword(auth, email, password);
+    handleAuthRedirect(createUserWithEmailAndPassword, email, password);
   };
 
   const logIn = (email, password) => {
-    return signInWithEmailAndPassword(auth, email, password);
+    return handleAuthRedirect(signInWithEmailAndPassword, email, password);
   };
 
   const firebaseSignOut = () => {

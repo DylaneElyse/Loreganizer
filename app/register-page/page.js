@@ -15,29 +15,11 @@ const [passwordVisible, setPasswordVisible] = useState(false);
     setPasswordVisible(!passwordVisible);
   };
 
-const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-const isValidPassword = (password) => {
-  const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{7,}).*$/;
-  return passwordRegex.test(password);
-}
-
 const handleSubmit = (event) => {
   try {
     event.preventDefault();
     console.log(email)
-    if (!isValidEmail(email)) {
-      alert("Invalid email format")
-      throw new Error("Invalid email format");
-    }
     console.log(password)
-    if (isValidPassword(password)) {
-      alert("Password must be at least 7 characters long, contain at least one uppercase letter, one number, and one special character.")
-      throw new Error("Password must be at least 7 characters long, contain at least one uppercase letter, one number, and one special character.");
-    }
     signUp(email, password)
     console.log("Registration form submitted");
   } catch (regError) {
