@@ -9,12 +9,43 @@ const { user, signUp } = useUserAuth();
 const [ email, setEmail ] = useState("");
 const [ password, setPassword ] = useState("");
 const [ error, setError ] = useState(null);
+const [passwordVisible, setPasswordVisible] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setPasswordVisible(!passwordVisible);
+  };
+
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+const isValidPassword = (password) => {
+  const passwordRegex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*])(?=.{7,}).*$/;
+  return passwordRegex.test(password);
+}
 
 const handleSubmit = (event) => {
-  event.preventDefault();
-  signUp(email, password,)
-  console.log("Registration form submitted");
+  try {
+    event.preventDefault();
+    console.log(email)
+    if (!isValidEmail(email)) {
+      alert("Invalid email format")
+      throw new Error("Invalid email format");
+    }
+    console.log(password)
+    if (isValidPassword(password)) {
+      alert("Password must be at least 7 characters long, contain at least one uppercase letter, one number, and one special character.")
+      throw new Error("Password must be at least 7 characters long, contain at least one uppercase letter, one number, and one special character.");
+    }
+    signUp(email, password)
+    console.log("Registration form submitted");
+  } catch (regError) {
+    setError(regError.message);
+    console.log(error);
+  }
 }
+
 return (
   <div>
     <Navbar />
@@ -38,16 +69,19 @@ return (
             className="input input-bordered w-full max-w-xs" 
           />
           <input 
-            type="password" 
+            type={passwordVisible ? 'text' : 'password'} 
             placeholder="Password" 
             onChange={(event) => setPassword(event.target.value)}
             value={password}
             required 
             className="input input-bordered w-full max-w-xs" 
           />
+          <button type="button" onClick={togglePasswordVisibility} className="btn btn-secondary mt-2">
+            {passwordVisible ? 'Hide Password' : 'Show Password'}
+          </button>
           <button type="submit" className="btn btn-primary" onClick={handleSubmit}>Register</button>
         </form>
-        <p className="mt-4">Already have an account? <a href="/register-page" className="text-primary">Login</a></p>
+        <p className="mt-4">Already have an account? <a href="/login-page" className="text-primary">Login</a></p>
       </div>
   </div>
 )

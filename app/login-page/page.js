@@ -8,10 +8,17 @@ export default function LoginPage() {
 const { user, logIn, firebaseSignOut } = useUserAuth();
 const [ email, setEmail ] = useState("");
 const [ password, setPassword ] = useState("");
+const [ error, setError ] = useState(null);
 
 const handleSubmit = (event) => {
-  event.preventDefault();
-  logIn(email, password)
+  try {
+    event.preventDefault();
+    logIn(email, password)
+    console.log("Login form submitted");
+  } catch (logInError) {
+    setError(logInError.message);
+    console.log(error);
+  }
 }
 
 return (
