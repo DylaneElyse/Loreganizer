@@ -11,7 +11,7 @@ return (
           <input type="password" placeholder="Password" className="input input-bordered w-full max-w-xs" required />
           <button type="submit" className="btn btn-primary">Login</button>
         </form>
-        <p className="mt-4">Don't have an account? <a href="/register-page" className="text-primary">Register</a></p>
+        <p className="mt-4">Need an account? <a href="/register-page" className="text-primary">Register</a></p>
       </div>
   </div>
 )
