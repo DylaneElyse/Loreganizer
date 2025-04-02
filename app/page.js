@@ -1,24 +1,24 @@
+import Navbar from "@/components/navbar";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Home() {
   return (
-<div data-theme="loreganizer" className="navbar bg-base-100">
-  <div className="flex-1">
-    <a className="btn btn-ghost text-xl">Loreganizer</a>
-  </div>
-  <div className="flex-none">
-    <ul className="menu menu-horizontal px-1">
-      <li><a>Link</a></li>
-      <li>
-        <details>
-          <summary>Parent</summary>
-          <ul className="bg-base-100 rounded-t-none p-2">
-            <li><a>Link 1</a></li>
-            <li><a>Link 2</a></li>
-          </ul>
-        </details>
-      </li>
-    </ul>
-  </div>
-</div>
+    <div>
+      <Navbar />
+      <div>
+        <div className="hero min-h-screen bg-base-200">
+          <div className="hero-content flex-col lg:flex-row-reverse">
+            <Image src="/loreganizer-logo.png" alt="Loreganizer" width={500} height={400} className="max-w-sm rounded-lg" /> 
+            <div className="flex flex-col justify-center items-center">
+              <h1 className="text-5xl font-bold">Loreganizer</h1>
+              <p className="py-6">A campaign management tool for your favorite games.</p>
+              <Link href="/register-page" className="btn btn-primary">
+                <p>Get Started</p>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 )}

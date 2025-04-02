@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html data-theme="loreganizer" lang="en">
+    <html data-theme="fantasy" lang="en">
       <body>
         {children}
       </body>
