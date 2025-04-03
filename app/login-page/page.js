@@ -10,10 +10,10 @@ const [ email, setEmail ] = useState("");
 const [ password, setPassword ] = useState("");
 const [ error, setError ] = useState(null);
 
-const handleSubmit = (event) => {
+const handleSubmit = async (event) => {
   try {
     event.preventDefault();
-    logIn(email, password)
+    await logIn(email, password)
     console.log("Login form submitted");
   } catch (logInError) {
     setError(logInError.message);
