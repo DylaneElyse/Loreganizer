@@ -15,12 +15,12 @@ const [passwordVisible, setPasswordVisible] = useState(false);
     setPasswordVisible(!passwordVisible);
   };
 
-const handleSubmit = (event) => {
+const handleSubmit = async (event) => {
   try {
     event.preventDefault();
     console.log(email)
     console.log(password)
-    signUp(email, password)
+    await signUp(email, password)
     console.log("Registration form submitted");
   } catch (regError) {
     setError(regError.message);

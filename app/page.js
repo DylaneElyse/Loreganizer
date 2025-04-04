@@ -17,9 +17,9 @@ export default function Home() {
           <Image src="/loreganizer-logo.png" alt="Loreganizer" width={500} height={400} className="max-w-sm rounded-lg" /> 
           <div className="flex flex-col justify-center items-center">
             <h1 className="text-5xl font-bold">Loreganizer</h1>
-            <p className="py-6">A campaign management tool for your favorite games.</p>
-            <Link href="/dashboard" className="btn btn-primary">
-              <p>Go to Dashboard</p>
+            <p className="py-6">A campaign management tool for your favourite games.</p>
+            <Link href="/campaign-page" className="btn btn-primary">
+              <p>View Campaign</p>
             </Link>
           </div>
         </div>
@@ -31,7 +31,7 @@ export default function Home() {
             <Image src="/loreganizer-logo.png" alt="Loreganizer" width={500} height={400} className="max-w-sm rounded-lg" /> 
             <div className="flex flex-col justify-center items-center">
               <h1 className="text-5xl font-bold">Loreganizer</h1>
-              <p className="py-6">A campaign management tool for your favorite games.</p>
+              <p className="py-6">A campaign management tool for your favourite games.</p>
               <Link href="/register-page" className="btn btn-primary">
                 <p>Get Started</p>
               </Link>
