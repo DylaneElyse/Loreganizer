@@ -36,7 +36,6 @@
   --noise: 0;
 } */
 
-
 @plugin "daisyui/theme" {
   name: "fantasy";
   default: true;
@@ -71,4 +70,3 @@
   --depth: 1;
   --noise: 0;
 }
-
