@@ -7,8 +7,9 @@ import {
   signOut,
   onAuthStateChanged,
 } from "firebase/auth";
-import { auth } from "./firebase";
+import { auth, db } from "./firebase";
 import { useRouter } from "next/navigation";
+import { doc, setDoc } from "firebase/firestore";
 
 const AuthContext = createContext();
 
@@ -16,19 +17,56 @@ export const AuthContextProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const router = useRouter();
 
-  const handleAuthRedirect = async (authFunction, email, password) => {
+  const handleAuthRedirect = async (
+    authFunction,
+    email,
+    password,
+    additionalData
+  ) => {
     try {
       // Pass auth instance as first argument
-      await authFunction(auth, email, password);
-      router.push('/');
+      const userCredential = await authFunction(auth, email, password);
+      const user = userCredential.user;
+
+      if (additionalData.firstName && additionalData.lastName) {
+        await setDoc(doc(db, "users", user.uid), {
+          uuid: user.uid,
+          first_name: additionalData.firstName,
+          last_name: additionalData.lastName,
+          email: user.email,
+          createdAt: new Date().toISOString(),
+        });
+      }
+
+      router.push("/");
     } catch (error) {
       console.error("Error during authentication:", error.message);
+      if (error.code === "auth/password-does-not-meet-requirements") {
+        alert(
+          "Password does not meet requirements. Please check and try again."
+        );
+      } else if (error.code === "auth/user-not-found") {
+        alert("User not found. Please sign up first.");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password. Please try again.");
+      } else if (error.code === "auth/email-already-in-use") {
+        alert("Email already in use. Please log in or use a different email.");
+      } else if (error.code === "auth/weak-password") {
+        alert("Weak password. Please use a stronger password.");
+      } else if (error.code === "auth/invalid-password") {
+        alert("Invalid password. Please check and try again.");
+      } else if (error.code === "auth/invalid-email") {
+        alert("Invalid email format. Please check and try again.");
+      }
       throw error;
     }
-  }
+  };
 
-  const signUp = (email, password) => {
-    return handleAuthRedirect(createUserWithEmailAndPassword, email, password);
+  const signUp = (email, password, firstName, lastName) => {
+    return handleAuthRedirect(createUserWithEmailAndPassword, email, password, {
+      firstName,
+      lastName,
+    });
   };
 
   const logIn = (email, password) => {
@@ -44,7 +82,7 @@ export const AuthContextProvider = ({ children }) => {
       setUser(currentUser);
     });
     return () => unsubscribe();
-  }, []); 
+  }, []);
 
   return (
     <AuthContext.Provider value={{ user, signUp, logIn, firebaseSignOut }}>
@@ -102,7 +140,7 @@ export const useUserAuth = () => {
 //       setUser(currentUser);
 //     });
 //     return () => unsubscribe();
-//   }, []); 
+//   }, []);
 
 //   return (
 //     <AuthContext.Provider value={{ user, signUp, logIn, firebaseSignOut }}>
