@@ -12,9 +12,12 @@ export default function Home() {
     <div>
       <Navbar />
       {user ? (
-      <div className="hero min-h-screen bg-base-200">
-        <div className="hero-content flex-col lg:flex-row-reverse">
-          <h1>Campaign</h1>
+      <div className="min-h-screen bg-base-200">
+        <div className="flex-col lg:flex-row-reverse">
+          <h1>Your Campaigns</h1>
+        </div>
+        <div>
+          <h1>Your Characters</h1>
         </div>
       </div>
       ) : (

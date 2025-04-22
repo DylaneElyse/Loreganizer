@@ -30,11 +30,11 @@ export const AuthContextProvider = ({ children }) => {
 
       if (additionalData.firstName && additionalData.lastName) {
         await setDoc(doc(db, "users", user.uid), {
-          uuid: user.uid,
-          first_name: additionalData.firstName,
-          last_name: additionalData.lastName,
+          userId: user.uid,
+          firstName: additionalData.firstName,
+          lastName: additionalData.lastName,
           email: user.email,
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
         });
       }
 
