@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-  collection,
-  query,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc, // Make sure getDoc is imported
-} from "firebase/firestore";
-import { db } from "@/_utils/firebase";
 import { useUserAuth } from "@/_utils/auth-context";
+import {
+  getCharacterWithInventory,
+  addInventoryItem,
+  updateInventoryItem,
+  deleteInventoryItem,
+} from "@/lib/firestore-helpers";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 
@@ -27,112 +22,56 @@ export default function CharacterInventoryPage({ params }) {
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  // Fetch character and inventory
+  // Load character and inventory data
   useEffect(() => {
-    const fetchData = async () => {
+    const loadData = async () => {
       if (!user) return;
 
       try {
         setLoading(true);
+        const { character: characterData, inventory: inventoryData } =
+          await getCharacterWithInventory(user.uid, characterId);
 
-        // Get character document
-        const characterRef = doc(
-          db,
-          "users",
-          user.uid,
-          "characters",
-          characterId
-        );
-        const characterSnap = await getDoc(characterRef);
-
-        if (!characterSnap.exists()) {
-          router.push("/characters");
-          return;
-        }
-        setCharacter(characterSnap.data());
-
-        // Get inventory subcollection
-        const inventoryRef = collection(
-          db,
-          "users",
-          user.uid,
-          "characters",
-          characterId,
-          "inventory"
-        );
-        const inventoryQuery = query(inventoryRef);
-        const inventorySnap = await getDocs(inventoryQuery);
-
-        const items = [];
-        inventorySnap.forEach((doc) => {
-          items.push({ id: doc.id, ...doc.data() });
-        });
-        setInventory(items);
+        setCharacter(characterData);
+        setInventory(inventoryData);
+        setError(null);
       } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load inventory");
+        console.error("Failed to load inventory:", err);
+        setError(err.message || "Failed to load inventory");
+        router.push("/characters");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchData();
-  }, [characterId, user, router]);
+    loadData();
+  }, [user, characterId, router]);
 
-  // ... rest of your component code remains the same ...
-  const addItem = async () => {
-    if (!newItem.name.trim() || !user) return;
+  const handleAddItem = async () => {
+    if (!newItem.name.trim()) return;
 
     try {
       setLoading(true);
-      const inventoryRef = collection(
-        db,
-        "users",
-        user.uid,
-        "characters",
-        characterId,
-        "inventory"
-      );
-
-      // Add new document to inventory subcollection
-      const docRef = await addDoc(inventoryRef, {
+      const addedItem = await addInventoryItem(user.uid, characterId, {
         name: newItem.name.trim(),
-        quantity: Math.max(1, newItem.quantity),
-        createdAt: new Date(),
+        quantity: Number(newItem.quantity) || 1,
       });
 
-      setInventory((prev) => [
-        ...prev,
-        {
-          id: docRef.id,
-          name: newItem.name.trim(),
-          quantity: newItem.quantity,
-        },
-      ]);
+      setInventory((prev) => [addedItem, ...prev]);
       setNewItem({ name: "", quantity: 1 });
+      setError(null);
     } catch (err) {
-      console.error("Error adding item:", err);
-      setError("Failed to add item");
+      console.error("Failed to add item:", err);
+      setError(err.message || "Failed to add item");
     } finally {
       setLoading(false);
     }
   };
 
-  const updateQuantity = async (itemId, newQuantity) => {
-    if (!user) return;
-
+  const handleUpdateQuantity = async (itemId, newQuantity) => {
     try {
       setLoading(true);
-      const itemRef = doc(
-        db,
-        "users",
-        user.uid,
-        "characters",
-        characterId,
-        "inventory",
-        itemId
-      );
-      await updateDoc(itemRef, {
+      await updateInventoryItem(user.uid, characterId, itemId, {
         quantity: Math.max(1, newQuantity),
       });
 
@@ -141,40 +80,92 @@ export default function CharacterInventoryPage({ params }) {
           item.id === itemId ? { ...item, quantity: newQuantity } : item
         )
       );
+      setError(null);
     } catch (err) {
-      console.error("Error updating quantity:", err);
-      setError("Failed to update quantity");
+      console.error("Failed to update quantity:", err);
+      setError(err.message || "Failed to update quantity");
     } finally {
       setLoading(false);
     }
   };
 
-  const removeItem = async (itemId) => {
-    if (!user) return;
+  const handleRemoveItem = async (itemId) => {
+    if (!confirm("Are you sure you want to remove this item?")) return;
 
     try {
       setLoading(true);
-      const itemRef = doc(
-        db,
-        "users",
-        user.uid,
-        "characters",
-        characterId,
-        "inventory",
-        itemId
-      );
-      await deleteDoc(itemRef);
-
+      await deleteInventoryItem(user.uid, characterId, itemId);
       setInventory((prev) => prev.filter((item) => item.id !== itemId));
+      setError(null);
     } catch (err) {
-      console.error("Error removing item:", err);
-      setError("Failed to remove item");
+      console.error("Failed to remove item:", err);
+      setError(err.message || "Failed to remove item");
     } finally {
       setLoading(false);
     }
   };
 
-  // ... (keep your existing rendering code, but update the handlers to use item.id instead of index)
+  if (!user) {
+    return (
+      <div>
+        <Navbar />
+        <div className="hero min-h-screen bg-base-200">
+          <div className="hero-content text-center">
+            <div className="max-w-md">
+              <h1 className="text-5xl font-bold">Please login</h1>
+              <p className="py-6">You need to be logged in to view inventory</p>
+              <Link href="/login" className="btn btn-primary">
+                Login
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading && !character) {
+    return (
+      <div>
+        <Navbar />
+        <div className="hero min-h-screen bg-base-200">
+          <span className="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div>
+        <Navbar />
+        <div className="hero min-h-screen bg-base-200">
+          <div className="alert alert-error max-w-md">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="stroke-current shrink-0 h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>{error}</span>
+            <button
+              onClick={() => window.location.reload()}
+              className="btn btn-sm"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -198,7 +189,8 @@ export default function CharacterInventoryPage({ params }) {
               }
               placeholder="Item name"
               className="input input-bordered flex-1"
-              onKeyDown={(e) => e.key === "Enter" && addItem()}
+              onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+              disabled={loading}
             />
             <input
               type="number"
@@ -207,17 +199,18 @@ export default function CharacterInventoryPage({ params }) {
               onChange={(e) =>
                 setNewItem((prev) => ({
                   ...prev,
-                  quantity: parseInt(e.target.value) || 1,
+                  quantity: Math.max(1, parseInt(e.target.value) || 1),
                 }))
               }
               className="input input-bordered w-20"
+              disabled={loading}
             />
             <button
-              onClick={addItem}
+              onClick={handleAddItem}
               className="btn btn-primary"
               disabled={loading || !newItem.name.trim()}
             >
-              {loading ? "Adding..." : "Add"}
+              {loading ? "Adding..." : "Add Item"}
             </button>
           </div>
 
@@ -225,7 +218,7 @@ export default function CharacterInventoryPage({ params }) {
           <div className="space-y-4">
             {inventory.length === 0 ? (
               <p className="text-center py-8 text-gray-500">
-                No items in inventory
+                {loading ? "Loading inventory..." : "No items in inventory"}
               </p>
             ) : (
               inventory.map((item) => (
@@ -235,18 +228,27 @@ export default function CharacterInventoryPage({ params }) {
                 >
                   <div className="flex-1">
                     <h3 className="font-medium">{item.name}</h3>
+                    {item.description && (
+                      <p className="text-sm text-gray-600">
+                        {item.description}
+                      </p>
+                    )}
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() =>
+                        handleUpdateQuantity(item.id, item.quantity - 1)
+                      }
                       className="btn btn-sm btn-square"
-                      disabled={item.quantity <= 1 || loading}
+                      disabled={loading || item.quantity <= 1}
                     >
                       -
                     </button>
                     <span className="w-8 text-center">{item.quantity}</span>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() =>
+                        handleUpdateQuantity(item.id, item.quantity + 1)
+                      }
                       className="btn btn-sm btn-square"
                       disabled={loading}
                     >
@@ -254,7 +256,7 @@ export default function CharacterInventoryPage({ params }) {
                     </button>
                   </div>
                   <button
-                    onClick={() => removeItem(item.id)}
+                    onClick={() => handleRemoveItem(item.id)}
                     className="btn btn-sm btn-error"
                     disabled={loading}
                   >
