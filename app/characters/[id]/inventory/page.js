@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useUserAuth } from "@/_utils/auth-context";
 import {
@@ -9,6 +9,7 @@ import {
   updateInventoryItem,
   deleteInventoryItem,
 } from "@/lib/firestore-helpers";
+import { searchItems, getItemData } from "@/lib/item-helpers";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 
@@ -17,21 +18,24 @@ export default function CharacterInventoryPage({ params }) {
   const { user } = useUserAuth();
   const [character, setCharacter] = useState(null);
   const [inventory, setInventory] = useState([]);
-  const [newItem, setNewItem] = useState({ name: "", quantity: 1 });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const suggestionsRef = useRef(null);
   const router = useRouter();
 
   // Load character and inventory data
   useEffect(() => {
     const loadData = async () => {
       if (!user) return;
-
       try {
         setLoading(true);
         const { character: characterData, inventory: inventoryData } =
           await getCharacterWithInventory(user.uid, characterId);
-
         setCharacter(characterData);
         setInventory(inventoryData);
         setError(null);
@@ -43,22 +47,58 @@ export default function CharacterInventoryPage({ params }) {
         setLoading(false);
       }
     };
-
     loadData();
   }, [user, characterId, router]);
 
-  const handleAddItem = async () => {
-    if (!newItem.name.trim()) return;
+  // Handle outside clicks to close suggestions
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        suggestionsRef.current &&
+        !suggestionsRef.current.contains(event.target)
+      ) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
+  // Update suggestions when search term changes
+  useEffect(() => {
+    if (searchTerm.length > 1) {
+      setSuggestions(searchItems(searchTerm));
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
+  }, [searchTerm]);
+
+  const handleItemSelect = (item) => {
+    setSelectedItem(item);
+    setSearchTerm(item.name);
+    setShowSuggestions(false);
+  };
+
+  const handleAddItem = async () => {
+    if (!selectedItem) return;
     try {
       setLoading(true);
-      const addedItem = await addInventoryItem(user.uid, characterId, {
-        name: newItem.name.trim(),
-        quantity: Number(newItem.quantity) || 1,
-      });
-
+      const itemData = {
+        name: selectedItem.name,
+        quantity: Number(quantity) || 1,
+        type: selectedItem.type || "misc",
+        weight: selectedItem.weight || 0,
+        description: selectedItem.description || "",
+        rarity: selectedItem.rarity || "common",
+        ...selectedItem,
+      };
+      const addedItem = await addInventoryItem(user.uid, characterId, itemData);
       setInventory((prev) => [addedItem, ...prev]);
-      setNewItem({ name: "", quantity: 1 });
+      setSearchTerm("");
+      setSelectedItem(null);
+      setQuantity(1);
       setError(null);
     } catch (err) {
       console.error("Failed to add item:", err);
@@ -74,7 +114,6 @@ export default function CharacterInventoryPage({ params }) {
       await updateInventoryItem(user.uid, characterId, itemId, {
         quantity: Math.max(1, newQuantity),
       });
-
       setInventory((prev) =>
         prev.map((item) =>
           item.id === itemId ? { ...item, quantity: newQuantity } : item
@@ -91,7 +130,6 @@ export default function CharacterInventoryPage({ params }) {
 
   const handleRemoveItem = async (itemId) => {
     if (!confirm("Are you sure you want to remove this item?")) return;
-
     try {
       setLoading(true);
       await deleteInventoryItem(user.uid, characterId, itemId);
@@ -177,42 +215,102 @@ export default function CharacterInventoryPage({ params }) {
             ← Back to Character
           </Link>
         </div>
-
         <div className="bg-base-100 rounded-lg shadow-md p-6">
           {/* Add New Item Form */}
-          <div className="flex gap-2 mb-6">
-            <input
-              type="text"
-              value={newItem.name}
-              onChange={(e) =>
-                setNewItem((prev) => ({ ...prev, name: e.target.value }))
-              }
-              placeholder="Item name"
-              className="input input-bordered flex-1"
-              onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
-              disabled={loading}
-            />
+          <div className="flex gap-2 mb-6 relative" ref={suggestionsRef}>
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                placeholder="Search items..."
+                className="input input-bordered w-full"
+                disabled={loading}
+                onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className="absolute z-10 mt-1 w-full bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                  {suggestions.map((item) => (
+                    <li
+                      key={item.name}
+                      className="px-4 py-2 hover:bg-base-200 cursor-pointer"
+                      onClick={() => handleItemSelect(item)}
+                    >
+                      <div className="font-medium">{item.name}</div>
+                      <div className="text-sm text-gray-600">
+                        {item.type || "item"} • {item.rarity || "common"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <input
               type="number"
               min="1"
-              value={newItem.quantity}
+              value={quantity}
               onChange={(e) =>
-                setNewItem((prev) => ({
-                  ...prev,
-                  quantity: Math.max(1, parseInt(e.target.value) || 1),
-                }))
+                setQuantity(Math.max(1, parseInt(e.target.value) || 1))
               }
               className="input input-bordered w-20"
-              disabled={loading}
+              disabled={loading || !selectedItem}
             />
             <button
               onClick={handleAddItem}
               className="btn btn-primary"
-              disabled={loading || !newItem.name.trim()}
+              disabled={loading || !selectedItem}
             >
-              {loading ? "Adding..." : "Add Item"}
+              {loading ? "Adding..." : "Add"}
             </button>
           </div>
+
+          {/* Item Preview */}
+          {selectedItem && (
+            <div className="mb-6 p-4 bg-base-200 rounded-lg">
+              <h3 className="font-bold text-lg">{selectedItem.name}</h3>
+              <div className="flex flex-wrap gap-4 mt-2">
+                {selectedItem.equipment_category?.name && (
+                  <span>Category: {selectedItem.equipment_category.name}</span>
+                )}
+                {selectedItem.weapon_category && (
+                  <span>Weapon Type: {selectedItem.weapon_category}</span>
+                )}
+                {selectedItem.rarity && (
+                  <span>Rarity: {selectedItem.rarity}</span>
+                )}
+                {selectedItem.weight && (
+                  <span>Weight: {selectedItem.weight} lbs</span>
+                )}
+                {selectedItem.cost && (
+                  <span>
+                    Cost: {selectedItem.cost.quantity} {selectedItem.cost.unit}
+                  </span>
+                )}
+                {selectedItem.damage && (
+                  <span>
+                    Damage: {selectedItem.damage.damage_dice}{" "}
+                    {selectedItem.damage.damage_type?.name || ""}
+                  </span>
+                )}
+                {selectedItem.range?.normal && (
+                  <span>Range: {selectedItem.range.normal} ft</span>
+                )}
+              </div>
+              {selectedItem.properties &&
+                selectedItem.properties.length > 0 && (
+                  <div className="mt-2">
+                    <span className="font-medium">Properties: </span>
+                    {selectedItem.properties
+                      .map((prop) => prop.name)
+                      .join(", ")}
+                  </div>
+                )}
+              {selectedItem.description && (
+                <p className="mt-2">{selectedItem.description}</p>
+              )}
+            </div>
+          )}
 
           {/* Inventory List */}
           <div className="space-y-4">
@@ -228,10 +326,35 @@ export default function CharacterInventoryPage({ params }) {
                 >
                   <div className="flex-1">
                     <h3 className="font-medium">{item.name}</h3>
+                    <div className="flex flex-wrap gap-2 text-sm text-gray-600">
+                      {item.equipment_category?.name && (
+                        <span>{item.equipment_category.name}</span>
+                      )}
+                      {item.weapon_category && (
+                        <span>• {item.weapon_category}</span>
+                      )}
+                      {item.rarity && <span>• {item.rarity}</span>}
+                      {item.weight && <span>• {item.weight} lbs</span>}
+                      {item.cost && (
+                        <span>
+                          • {item.cost.quantity} {item.cost.unit}
+                        </span>
+                      )}
+                      {item.damage && (
+                        <span>
+                          • {item.damage.damage_dice}{" "}
+                          {item.damage.damage_type?.name}
+                        </span>
+                      )}
+                    </div>
+                    {item.properties && item.properties.length > 0 && (
+                      <div className="text-sm text-gray-600 mt-1">
+                        <span className="font-medium">Properties: </span>
+                        {item.properties.map((prop) => prop.name).join(", ")}
+                      </div>
+                    )}
                     {item.description && (
-                      <p className="text-sm text-gray-600">
-                        {item.description}
-                      </p>
+                      <p className="text-sm mt-1">{item.description}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-2">
