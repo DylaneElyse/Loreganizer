@@ -12,6 +12,7 @@ import {
 import { searchItems, getItemData } from "@/lib/item-helpers";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
+import CurrencyTracker from "./currency-tracker";
 
 export default function CharacterInventoryPage({ params }) {
   const { id: characterId } = use(params);
@@ -75,6 +76,11 @@ export default function CharacterInventoryPage({ params }) {
       setShowSuggestions(false);
     }
   }, [searchTerm]);
+
+  const handleCurrencySave = (currency) => {
+    // Save to Firestore or your state management
+    console.log("Currency updated:", currency);
+  };
 
   const handleItemSelect = (item) => {
     setSelectedItem(item);
@@ -251,6 +257,12 @@ export default function CharacterInventoryPage({ params }) {
           <Link href={`/characters`} className="btn btn-ghost">
             ← Back to Character
           </Link>
+        </div>
+        <div>
+          <CurrencyTracker
+            characterId={characterId}
+            initialCurrency={character?.currency}
+          />
         </div>
         <div className="bg-base-100 rounded-lg shadow-md p-6">
           {/* Add New Item Form */}
