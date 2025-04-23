@@ -12,23 +12,16 @@ export default function Home() {
     <div>
       <Navbar />
       {user ? (
-      <div className="min-h-screen bg-base-200">
-        <div className="flex-col lg:flex-row-reverse">
-          <h1>Your Campaigns</h1>
-        </div>
-        <div>
-          <h1>Your Characters</h1>
-        </div>
-      </div>
-      ) : (
-      <div>
         <div className="hero min-h-screen bg-base-200">
-          <h1>Register or Login to view this content</h1>
+          <h1 className="text-4xl">Campaign Management Coming Soon</h1>
         </div>
-      </div>
+      ) : (
+        <div>
+          <div className="hero min-h-screen bg-base-200">
+            <h1>Register or Login to view this content</h1>
+          </div>
+        </div>
       )}
     </div>
-  )
-
-
+  );
 }
