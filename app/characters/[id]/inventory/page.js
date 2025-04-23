@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import { useUserAuth } from "@/_utils/auth-context";
 import {
@@ -14,11 +14,12 @@ import Link from "next/link";
 import Navbar from "@/components/navbar";
 
 export default function CharacterInventoryPage({ params }) {
-  const { id: characterId } = params;
+  const { id: characterId } = use(params);
   const { user } = useUserAuth();
   const [character, setCharacter] = useState(null);
   const [inventory, setInventory] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [customItem, setCustomItem] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -108,6 +109,39 @@ export default function CharacterInventoryPage({ params }) {
     }
   };
 
+const handleManualAdd = async () => {
+  try {
+    setLoading(true);
+    const itemName = customItem.trim();
+
+    if (!itemName) {
+      setError("Please enter an item name");
+      return;
+    }
+
+    const itemData = {
+      name: itemName,
+      quantity: Number(quantity) || 1,
+      type: "manual entry",
+      weight: 0,
+      description: "",
+      rarity: "unknown",
+    };
+
+    const addedItem = await addInventoryItem(user.uid, characterId, itemData);
+
+    setInventory((prev) => [addedItem, ...prev]);
+
+    setCustomItem("");  {/* Clear the custom item input */}
+    setQuantity(1);
+    setError(null);
+  } catch (err) {
+    console.error("Failed to add custom item:", err);
+    setError(err.message || "Failed to add custom item");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     try {
       setLoading(true);
@@ -211,12 +245,12 @@ export default function CharacterInventoryPage({ params }) {
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{character?.name}'s Inventory</h1>
-          <Link href={`/characters/${characterId}`} className="btn btn-ghost">
+          <Link href={`/characters`} className="btn btn-ghost">
             ← Back to Character
           </Link>
         </div>
         <div className="bg-base-100 rounded-lg shadow-md p-6">
-          {/* Add New Item Form */}
+          Add New Item Form
           <div className="flex gap-2 mb-6 relative" ref={suggestionsRef}>
             <div className="flex-1 relative">
               <input
@@ -224,7 +258,7 @@ export default function CharacterInventoryPage({ params }) {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onFocus={() => setShowSuggestions(true)}
-                placeholder="Search items..."
+                placeholder="Search items from list..."
                 className="input input-bordered w-full"
                 disabled={loading}
                 onKeyDown={(e) => e.key === "Enter" && handleAddItem()}
@@ -264,7 +298,37 @@ export default function CharacterInventoryPage({ params }) {
               {loading ? "Adding..." : "Add"}
             </button>
           </div>
-
+          {/* Manual Add Item Form */}
+          <div className="flex gap-2 mb-6 relative">
+            <div className="flex-1 relative">
+              <input
+                type="text"
+                placeholder="Add custom item..."
+                className="input input-bordered w-full"
+                disabled={loading}
+                value={customItem} 
+                onChange={(e) => setCustomItem(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
+              />
+            </div>
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(e) =>
+                setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              }
+              className="input input-bordered w-20"
+              disabled={loading}
+            />
+            <button
+              onClick={handleManualAdd}
+              className="btn btn-primary"
+              disabled={loading || !customItem.trim()}
+            >
+              {loading ? "Adding..." : "Add"}
+            </button>
+          </div>          
           {/* Item Preview */}
           {selectedItem && (
             <div className="mb-6 p-4 bg-base-200 rounded-lg">
@@ -311,7 +375,6 @@ export default function CharacterInventoryPage({ params }) {
               )}
             </div>
           )}
-
           {/* Inventory List */}
           <div className="space-y-4">
             {inventory.length === 0 ? (
@@ -330,7 +393,7 @@ export default function CharacterInventoryPage({ params }) {
                       {item.equipment_category?.name && (
                         <span>{item.equipment_category.name}</span>
                       )}
-                      {item.weapon_category && (
+                      {/* {item.weapon_category && (
                         <span>• {item.weapon_category}</span>
                       )}
                       {item.rarity && <span>• {item.rarity}</span>}
@@ -345,7 +408,7 @@ export default function CharacterInventoryPage({ params }) {
                           • {item.damage.damage_dice}{" "}
                           {item.damage.damage_type?.name}
                         </span>
-                      )}
+                      )} */}
                     </div>
                     {item.properties && item.properties.length > 0 && (
                       <div className="text-sm text-gray-600 mt-1">

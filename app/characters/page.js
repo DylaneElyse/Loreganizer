@@ -186,6 +186,12 @@ export default function CharactersPage() {
 
                   <div className="card-actions justify-end">
                     <Link
+                      href={`/characters/${character.id}/edit`}
+                      className="btn btn-secondary btn-sm"
+                    >
+                      Edit Character
+                    </Link>
+                    <Link
                       href={`/characters/${character.id}/inventory`}
                       className="btn btn-primary btn-sm"
                     >
