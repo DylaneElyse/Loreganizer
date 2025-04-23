@@ -109,39 +109,42 @@ export default function CharacterInventoryPage({ params }) {
     }
   };
 
-const handleManualAdd = async () => {
-  try {
-    setLoading(true);
-    const itemName = customItem.trim();
+  const handleManualAdd = async () => {
+    try {
+      setLoading(true);
+      const itemName = customItem.trim();
 
-    if (!itemName) {
-      setError("Please enter an item name");
-      return;
+      if (!itemName) {
+        setError("Please enter an item name");
+        return;
+      }
+
+      const itemData = {
+        name: itemName,
+        quantity: Number(quantity) || 1,
+        type: "manual entry",
+        weight: 0,
+        description: "",
+        rarity: "unknown",
+      };
+
+      const addedItem = await addInventoryItem(user.uid, characterId, itemData);
+
+      setInventory((prev) => [addedItem, ...prev]);
+
+      setCustomItem("");
+      {
+        /* Clear the custom item input */
+      }
+      setQuantity(1);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to add custom item:", err);
+      setError(err.message || "Failed to add custom item");
+    } finally {
+      setLoading(false);
     }
-
-    const itemData = {
-      name: itemName,
-      quantity: Number(quantity) || 1,
-      type: "manual entry",
-      weight: 0,
-      description: "",
-      rarity: "unknown",
-    };
-
-    const addedItem = await addInventoryItem(user.uid, characterId, itemData);
-
-    setInventory((prev) => [addedItem, ...prev]);
-
-    setCustomItem("");  {/* Clear the custom item input */}
-    setQuantity(1);
-    setError(null);
-  } catch (err) {
-    console.error("Failed to add custom item:", err);
-    setError(err.message || "Failed to add custom item");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   const handleUpdateQuantity = async (itemId, newQuantity) => {
     try {
       setLoading(true);
@@ -250,8 +253,8 @@ const handleManualAdd = async () => {
           </Link>
         </div>
         <div className="bg-base-100 rounded-lg shadow-md p-6">
-          Add New Item Form
-          <div className="flex gap-2 mb-6 relative" ref={suggestionsRef}>
+          {/* Add New Item Form */}
+          {/* <div className="flex gap-2 mb-6 relative" ref={suggestionsRef}>
             <div className="flex-1 relative">
               <input
                 type="text"
@@ -297,7 +300,7 @@ const handleManualAdd = async () => {
             >
               {loading ? "Adding..." : "Add"}
             </button>
-          </div>
+          </div> */}
           {/* Manual Add Item Form */}
           <div className="flex gap-2 mb-6 relative">
             <div className="flex-1 relative">
@@ -306,7 +309,7 @@ const handleManualAdd = async () => {
                 placeholder="Add custom item..."
                 className="input input-bordered w-full"
                 disabled={loading}
-                value={customItem} 
+                value={customItem}
                 onChange={(e) => setCustomItem(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleManualAdd()}
               />
@@ -328,7 +331,7 @@ const handleManualAdd = async () => {
             >
               {loading ? "Adding..." : "Add"}
             </button>
-          </div>          
+          </div>
           {/* Item Preview */}
           {selectedItem && (
             <div className="mb-6 p-4 bg-base-200 rounded-lg">
