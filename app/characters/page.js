@@ -13,45 +13,82 @@ export default function CharactersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchCharacters = async () => {
-    if (!user) {
-      setLoading(false);
-      return;
-    }
+  // const fetchCharacters = async () => {
+  //   if (!user) {
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    try {
-      setLoading(true);
-      setError(null);
+  //   try {
+  //     setLoading(true);
+  //     setError(null);
 
-      // Query the subcollection directly
-      const charactersRef = collection(db, "users", user.uid, "characters");
-      const q = query(
-        charactersRef
-        // orderBy("createdAt", "desc") // Now works without composite index
-      );
+  //     // Query the subcollection directly
+  //     const charactersRef = collection(db, "users", user.uid, "characters");
+  //     const q = query(
+  //       charactersRef
+  //       // orderBy("createdAt", "desc") // Now works without composite index
+  //     );
 
-      const querySnapshot = await getDocs(q);
-      const charactersData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().name || "Unnamed Character",
-        // species: doc.data().species || doc.data().Species || "Unknown",
-        // class: doc.data().class || doc.data().Class || "Unknown",
-        campaign: doc.data().campaign || doc.data().Campaign,
-        // level: doc.data().level,
-        // createdAt: doc.data().createdAt?.toDate() || new Date(),
-        ...doc.data(),
-      }));
+  //     const querySnapshot = await getDocs(q);
+  //     const charactersData = querySnapshot.docs.map((doc) => ({
+  //       id: doc.id,
+  //       name: doc.data().name || "Unnamed Character",
+  //       // species: doc.data().species || doc.data().Species || "Unknown",
+  //       // class: doc.data().class || doc.data().Class || "Unknown",
+  //       campaign: doc.data().campaign || doc.data().Campaign,
+  //       // level: doc.data().level,
+  //       // createdAt: doc.data().createdAt?.toDate() || new Date(),
+  //       ...doc.data(),
+  //     }));
 
-      setCharacters(charactersData);
-    } catch (err) {
-      console.error("Error fetching characters:", err);
-      setError(err.message || "Failed to load characters");
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     setCharacters(charactersData);
+  //   } catch (err) {
+  //     console.error("Error fetching characters:", err);
+  //     setError(err.message || "Failed to load characters");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
+    const fetchCharacters = async () => {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Query the subcollection directly
+        const charactersRef = collection(db, "users", user.uid, "characters");
+        const q = query(
+          charactersRef
+          // orderBy("createdAt", "desc") // Now works without composite index
+        );
+
+        const querySnapshot = await getDocs(q);
+        const charactersData = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().name || "Unnamed Character",
+          // species: doc.data().species || doc.data().Species || "Unknown",
+          // class: doc.data().class || doc.data().Class || "Unknown",
+          campaign: doc.data().campaign || doc.data().Campaign,
+          // level: doc.data().level,
+          // createdAt: doc.data().createdAt?.toDate() || new Date(),
+          ...doc.data(),
+        }));
+
+        setCharacters(charactersData);
+      } catch (err) {
+        console.error("Error fetching characters:", err);
+        setError(err.message || "Failed to load characters");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchCharacters();
   }, [user]);
 
@@ -143,7 +180,7 @@ export default function CharactersPage() {
               />
             </svg>
             <span>
-              You don't have any characters yet. Create your first one!
+              You don&apos;t have any characters yet. Create your first one!
             </span>
           </div>
         ) : (

@@ -253,7 +253,9 @@ export default function CharacterInventoryPage({ params }) {
       <Navbar />
       <div className="container mx-auto p-4">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">{character?.name}'s Inventory</h1>
+          <h1 className="text-3xl font-bold">
+            {character?.name}&apos;s Inventory
+          </h1>
           <Link href={`/characters`} className="btn btn-ghost">
             ← Back to Character
           </Link>
