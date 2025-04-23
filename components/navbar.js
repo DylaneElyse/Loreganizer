@@ -56,10 +56,10 @@ export default function Navbar() {
                 <Link href="/">Home</Link>
               </li>
               <li>
-                <Link href="/login-page">Login</Link>
+                <Link href="/login">Login</Link>
               </li>
               <li>
-                <Link href="/register-page">Register</Link>
+                <Link href="/register">Register</Link>
                 {/* <details>
                 <summary>Parent</summary>
                 <ul className="bg-base-100 rounded-t-none p-2">

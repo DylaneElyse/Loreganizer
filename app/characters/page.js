@@ -154,12 +154,6 @@ export default function CharactersPage() {
                 <div className="card-body">
                   <h2 className="card-title">{character.name}</h2>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    <div className="badge badge-primary">
-                      {character.species}
-                    </div>
-                    <div className="badge badge-secondary">
-                      {character.class}
-                    </div>
                     {character.level && (
                       <div className="badge badge-accent">
                         Level {character.level}

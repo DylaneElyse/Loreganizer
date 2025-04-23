@@ -78,7 +78,7 @@ export default function LoginPage() {
           <p className="mt-4">
             Need an account?{" "}
             <a
-              href="/register-page"
+              href="/register"
               className="text-primary hover:text-purple-600 cursor-pointer"
             >
               Register
