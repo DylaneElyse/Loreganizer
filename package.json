@@ -11,8 +11,7 @@
   "dependencies": {
     "firebase": "^11.6.0",
     "firebase-admin": "^13.3.0",
-    "fuse": "^0.12.1",
-    "next": "15.2.8",
+    "next": "^15.5.29",
     "postcss": "^8.5.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
@@ -22,7 +21,7 @@
     "@tailwindcss/postcss": "^4.1.0",
     "daisyui": "^5.0.9",
     "eslint": "^9",
-    "eslint-config-next": "15.2.4",
+    "eslint-config-next": "^15.5.29",
     "tailwindcss": "^4.1.0"
   }
 }
